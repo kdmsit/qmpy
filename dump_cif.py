@@ -1,12 +1,11 @@
 import pandas as pd
 from qmpy import *
 
-data=pd.read_csv("experimental_prop.csv").values[:,0]
+data=pd.read_csv("exp_data/experimental_prop.csv").values[:,0]
+print("Hello")
 for i in range(len(data)):
     composition=data[0]
-    entry=Element.get(composition)
-print(entry)
+    entry=Element.objects.get(symbol=composition)
+    structure =Structure(entry)
+    io.cif.write(structure, "exp_data/"+str(i)+".cif")
 
-
-# s = io.poscar.read('qmpy/io/files/POSCAR_BCC')
-# print(s)
