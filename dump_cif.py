@@ -8,6 +8,5 @@ from qmpy import *
 # print(entry)
 
 
-# s = io.poscar.read('qmpy/io/files/POSCAR_BCC')
-s = io.cif.read('qmpy/io/files/fe3o4.cif')
+s = io.poscar.read('qmpy/io/files/POSCAR_BCC')
 print(s)
