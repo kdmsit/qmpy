@@ -2,7 +2,6 @@ import pandas as pd
 from qmpy import *
 
 data=pd.read_csv("exp_data/experimental_prop.csv").values[:,0]
-print("Hello")
 for i in range(len(data)):
     composition=data[i]
     entry=Element.objects.get(symbol=composition)
