@@ -1,0 +1,169 @@
+{% extends "base_site.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ search }}{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static "css/flot.css" %}"/>
+{% endblock %}
+
+{% block extrascript %}
+<script language="javascript" type="text/javascript">
+  $(function() {
+      {{ plot | safe }}
+      });
+    </script>
+    
+{% if pd3d %}
+<script type="text/javascript" src="https://cdn.plot.ly/plotly-1.49.4.min.js">
+</script>
+<script language="javascript" type="text/javascript">
+$(function() {
+    {{ pd3d | safe }}
+    });
+</script>
+{% else %}
+<script language="javascript" type="text/javascript">
+$(function() {
+    {{ pd | safe }}
+    });
+</script>
+{% endif %}
+
+        <script type='text/javascript'>//<![CDATA[ 
+          window.onload=function(){
+            var theForm = document.getElementById('theForm');
+            var theInput = document.getElementById('subj');
+            theForm.onsubmit = function(e) {
+              location = "/materials/composition/" + encodeURIComponent(theInput.value);
+              return false;
+            }
+          }//]]>  
+        </script>
+        {% endblock %}
+
+{% block content_title %}
+<h1>Region: {{ search }}</h1>
+{% endblock %}
+
+{% block content %}
+
+<div class="box">
+  {% if pd3d %}
+  <div style="width:600px;height:500px;padding:1px;">
+  {% else %}
+  <div style="width:500px;height:400px;padding:30px;">
+  {% endif %}
+    <div id="phasediagram" class="flot-placeholder"></div>
+  </div>
+</div>
+
+<div style="float:left">
+  {% if stable %}
+  <h2> Stable phases </h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Spacegroup</th>
+        <th>Formation Energy [eV/atom]</th>
+        <th>Stability [eV/atom]</th>
+        <th>Prototype</th>
+        <th># of atoms</th>
+        <th>Project</th>
+        <th>Finish Time</th>
+        <th>Reference</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for fe, pro, ftime in stable %}
+      <tr class=clickableRow href="/materials/entry/{{ fe.entry.id }}">
+        <td>{{ fe.entry.html | safe }}</td>
+        <td>{{ fe.calculation.output.spacegroup.hm }}</td>
+        <td>{{ fe.entry.energy |floatformat:-3 }}</td>
+        {% if fe.stability < 0 %}
+            <td>{{ 0 }}</td>
+        {% else %}
+            <td>{{ fe.stability |floatformat:-3 }}</td>
+        {% endif %}
+        <td>{{ fe.entry.prototype.name }}</td>
+        <td>{{ fe.entry.natoms }}</td>
+        <td>{{ pro }}</td>
+        <td width="8%">{{ ftime |date:"M Y" }}</td>
+        <td width="40%">{{ fe.entry.reference.citation }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+
+{% if results %}
+<div style="padding-top:20px;float:left">
+<h1> Compounds contained in this region of phase space </h1>
+<table>
+<thead>
+  <tr>
+    <th>ID</th>
+    <th>Composition</th>
+    <th>Spacegroup</th>
+    <th>Formation Energy [eV/atom]</th>
+    <th>Stability [eV/atom]</th>
+    <th>Prototype</th>
+    <th># of atoms</th>
+    <th>Projects</th>
+    <th>Finish Time</th>
+    <th>Reference</th>
+  </tr>
+</thead>
+
+<tbody>
+  {% for group, fes in results %}
+  <tr class=clickableRow href="/materials/composition/{{group}}">
+    <td colspan="6"><h2>{{group}}</h2></td>
+  </tr>
+  {% for fe, pro, ftime in fes %}
+  <tr class=clickableRow href="/materials/entry/{{ fe.entry.id }}">
+    <td>{{ fe.entry.id }}</td>
+    <td>{{ fe.entry.html | safe }}</td>
+    <td>{{ fe.calculation.output.spacegroup.hm }}</td>
+    <td>{{ fe.entry.energy |floatformat:-3 }}</td>
+    {% if fe.stability < 0 %}
+        <td>{{ 0 }}</td>
+    {% else %}
+        <td>{{ fe.stability |floatformat:-3 }}</td>
+    {% endif %}
+    <td>{{ fe.entry.prototype.name }}</td>
+    <td>{{ fe.entry.natoms }}</td>
+    <td>{{ pro }}</td>
+    <td width="8%">{{ ftime |date:"M Y" }}</td>
+    <td>{{ fe.entry.reference.citation }}</td>
+  </tr>
+  {% endfor %}
+  {% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+<div id="sidebar" class="box">
+  <h2 class="subhead"> Search for a composition or region </h2>
+  <form id="theForm">
+    <input id='subj' value="{{ search }}"/>
+    <input type='submit'/>
+  </form>
+  Examples:<br>
+  <ul>
+    <li>Al2O3
+    <li>LiFeO2
+    <li>Cu2MnAl
+    <li>Fe-O
+    <li>Ni-Ti-Al
+  </ul>
+
+</div>
+{% endblock %}

@@ -1,0 +1,396 @@
+{% extends "base_site.html" %}
+{% load static %}
+{% load i18n %}
+
+
+{% block title %}
+{% if search %}
+{{search}}
+{% else %}
+OQMD | Search Phases
+{% endif %}
+{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static "css/flot.css" %}"/>
+<style>
+.comp {
+    margin-left:15px
+}
+.question {
+    margin-left:3px;
+    margin-right:3px;
+    background-color:yellow;
+}
+</style>
+{% endblock %}
+
+{% block extrascript %}
+<script language="javascript" type="text/javascript" src={% static "js/jquery.flot.pie.js" %}></script>
+
+{% if phase_comp %}
+<script language="javascript" type="text/javascript">
+  function labelFormatter(label, series) {
+        return "<div style='font-size:12pt; text-align:center; padding:2px; color:black;'>" + label + "<br/>" + Math.round(series.percent) + "%</div>";
+          }
+  $(function() {
+    $.plot("#phasecomp", {{ phase_comp | safe }}, {
+      legend: {show: false,
+      labelFormatter: function(label, series) {
+      return '<a href="/materials/composition/'+label+'">'+label+'</a>';}
+      },
+      series: {
+        pie: {
+          show: true,
+          label: {
+            background: { opacity: 0},
+            formatter: labelFormatter}
+          }
+        },
+      height: '100%',  
+      });
+    });
+</script>
+{% endif %}
+
+<script language="javascript" type="text/javascript">
+$(function() {
+    {{ plot | safe }}
+    });
+</script>
+
+{% if pd3d %}
+<script type="text/javascript" src="https://cdn.plot.ly/plotly-1.49.4.min.js">
+</script>
+<script language="javascript" type="text/javascript">
+$(function() {
+    {{ pd3d | safe }}
+    });
+</script>
+{% else %}
+<script language="javascript" type="text/javascript">
+$(function() {
+    {{ pd | safe }}
+    });
+</script>
+{% endif %}
+
+<script type='text/javascript'>//<![CDATA[ 
+window.onload=function(){
+var theForm = document.getElementById('theForm');
+var theInput = document.getElementById('subj');
+
+theForm.onsubmit = function(e) {
+    location = "/materials/composition/" + encodeURIComponent(theInput.value);
+    return false;
+}
+}//]]>  
+</script>
+
+<script language="javascript" type="text/javascript">
+function openWindow() {
+    msgwin = window.open('', 'popup', 'width=900px, height=550px');
+    msgwin.document.write(
+            '<HTML><HEAD><TITLE>Definition</TITLE></HEAD>' +
+            '<Body>' +
+            '<img src={% static "img/Explanation_Chull.png" %} style="width:100vw">' +
+            '</Body>');
+
+}
+</script>
+
+{% endblock %}
+
+{% block content_title %}
+{% if gs %}
+  <h1> Composition: {{ composition.html |safe }}</h1>
+  {% if phase_type == 'stable' %}
+<script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      "name": "Computational stability data of {{ composition.html |safe }}  from Density Functional Theory calculations",
+      "isPartOf": {
+        "@type": "Dataset",
+        "name": "The Open Quantum Materials Database",
+        "description":"Open Quantum Materials Database (OQMD) is a database of DFT calculated thermodynamic and structural properties materials, created in Chris Wolverton's group at Northwestern University",
+        "alternateName":"OQMD",
+        "url": "http://oqmd.org/",
+        "license" : "https://creativecommons.org/licenses/by/4.0/",
+        "creator":{
+          "@type":"Organization",
+          "url": "http://oqmd.org/",
+          "name":"The Open Quantum Materials Database",
+          "alternateName":"OQMD",
+          "contactPoint":{
+             "@type":"ContactPoint",
+             "contactType": "general queries",
+             "email":"oqmd.questions@gmail.com"
+          }
+        },
+        "keywords": "MATERIALS DATA, COMPUTATIONAL MATERIALS, DFT, DENSITY FUNCTIONAL THEORY, THERMODYNAMIC PROPERTIES, INORGANIC MATERIALS, CONVEX HULL, MATERIAL STABILITY, FORMATION ENERGY, PHASE DIAGRAM"
+      },
+      "creator":{
+         "@type":"Organization",
+         "url": "http://oqmd.org/",
+         "name":"The Open Quantum Materials Database",
+         "alternateName":"OQMD",
+         "contactPoint":{
+            "@type":"ContactPoint",
+            "contactType": "general queries",
+            "email":"oqmd.questions@gmail.com"
+         }
+      },
+      "measurementTechnique": "Computational, Density Functional Theory",
+      "url": "http://www.oqmd.org/materials/composition/{{ composition.html |safe }}",
+      "description":"This composition appears in the {{ space }} region of phase space. It's relative stability is shown in the {{ space }} phase diagram (left). The relative stability of all other phases at this composition (and the combination of other stable phases, if no compound at this composition is stable) is shown in the relative stability plot (right)",
+      "keywords": "{{ composition.html |safe }}, CONVEX HULL, STABILITY",
+      "license" : "https://creativecommons.org/licenses/by/4.0/",
+      "variableMeasured": [
+                             {
+                               "@type": "PropertyValue",
+                                "name": "Composition",
+                                "value": "{{ composition.html |safe }}"
+                             },
+                             {
+                               "@type": "PropertyValue",
+                               "name": "Stability",
+                               "value": "0",
+                               "unitText": "ev/atom",
+                               "measurementTechnique": "Computational, DFT"
+                             },
+                             {
+                               "@type": "PropertyValue",
+                               "name": "Decomposition Energy",
+                               "value": "{{ decomp_en | floatformat:-3}}",
+                               "unitText": "eV/atom",
+                               "measurementTechnique": "Computational, DFT"
+                             }
+                           ]
+     
+    }
+</script>
+  <p><span style="font-size:25px;background-color:green;color:white;font-weight:800;margin-left:15px">
+      &nbsp;Stable Phase&nbsp;</span></p>
+  <p class="comp"> 
+    <b>Ground State Phase:</b> 
+    <a href="/materials/entry/{{current_phase.formation.entry.id}}"
+      target='_blank'>
+     {{ composition.ground_state.html |safe}}
+    </a>
+  </p>
+  <p class="comp"><b>&Delta;H:</b> {{delta_h | floatformat:-3}} eV/atom </p>
+  <p class="comp"><b>Decomposition Energy<button onClick="openWindow()" class="question">?</button>:</b> {{ decomp_en | floatformat:-3}} eV/atom </p>
+  <p class="comp"> <b>Competing Phases: </b> {{ phase_links |safeseq |join:" + " }} </p>
+
+  {% elif phase_type == 'unstable' %}
+<script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      "name": "Computational stability data of {{ composition.html |safe }}  from Density Functional Theory calculations",
+      "isPartOf": {
+        "@type": "Dataset",
+        "name": "The Open Quantum Materials Database",
+        "description":"Open Quantum Materials Database (OQMD) is a database of DFT calculated thermodynamic and structural properties materials, created in Chris Wolverton's group at Northwestern University",
+        "alternateName":"OQMD",
+        "url": "http://oqmd.org/",
+        "license" : "https://creativecommons.org/licenses/by/4.0/",
+        "creator":{
+          "@type":"Organization",
+          "url": "http://oqmd.org/",
+          "name":"The Open Quantum Materials Database",
+          "alternateName":"OQMD",
+          "contactPoint":{
+             "@type":"ContactPoint",
+             "contactType": "general queries",
+             "email":"oqmd.questions@gmail.com"
+          }
+        },
+        "keywords": "MATERIALS DATA, COMPUTATIONAL MATERIALS, DFT, DENSITY FUNCTIONAL THEORY, THERMODYNAMIC PROPERTIES, INORGANIC MATERIALS, CONVEX HULL, MATERIAL STABILITY, FORMATION ENERGY, PHASE DIAGRAM"
+      },
+      "creator":{
+         "@type":"Organization",
+         "url": "http://oqmd.org/",
+         "name":"The Open Quantum Materials Database",
+         "alternateName":"OQMD",
+         "contactPoint":{
+            "@type":"ContactPoint",
+            "contactType": "general queries",
+            "email":"oqmd.questions@gmail.com"
+         }
+      },
+      "measurementTechnique": "Computational, Density Functional Theory",
+      "url": "http://www.oqmd.org/materials/composition/{{ composition.html |safe }}",
+      "description":"This composition appears in the {{ space }} region of phase space. It's relative stability is shown in the {{ space }} phase diagram (left). The relative stability of all other phases at this composition (and the combination of other stable phases, if no compound at this composition is stable) is shown in the relative stability plot (right)",
+      "keywords": " {{ composition.html |safe }}, CONVEX HULL, STABILITY",
+      "license" : "https://creativecommons.org/licenses/by/4.0/",
+      "variableMeasured": [
+                             { 
+                               "@type": "PropertyValue",
+                                "name": "Composition",
+                                "value": "{{ composition.html |safe }}"
+                             },
+                             {
+                               "@type": "PropertyValue",
+                               "name": "Stability",
+                               "value": "{{ hull_dis | floatformat:-3}}",
+                               "unitText": "eV/atom",
+                               "measurementTechnique": "Computational, DFT"
+                             }
+                           ]
+     
+    }
+</script>
+
+  <p class="comp"> 
+    <b>Entry Link:</b> 
+    <a href="/materials/entry/{{current_phase.formation.entry.id}}"
+      target='_blank'>
+      {{ composition.ground_state.html |safe}}
+    </a>
+  </p>
+  <p class="comp"><b>&Delta;H:</b> {{delta_h | floatformat:-3}} eV/atom </p>
+  <p class="comp"><b>Hull Distance<button onClick="openWindow()" class="question">?</button>:</b> {{ hull_dis | floatformat:-3}} eV/atom </p>
+  <p class="comp"> <b>Decompose Into: </b> {{ phase_links |safeseq |join:" + " }} </p>
+
+  {% elif phase_type == 'nophase' %}
+
+  <p class="comp"><b>No Calculated Phase</b></p>
+  <p class="comp"><b>&Delta;H:</b> {{delta_h | floatformat:-3}} eV/atom </p>
+  <p class="comp"> <b>Decompose Into: </b> {{ phase_links |safeseq |join:" + " }} </p>
+  {% endif %}
+{% endif %}
+{% if composition.experiment %}
+<p class="comp" style="font-size:18px"><u><b>Experimental formation energy:</b> {{ composition.experiment | floatformat:-3 }} eV/atom</u></p>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if gs %}
+<div class="box">
+  This composition appears in the {{ space }} region of phase space. It's relative stability is shown in the {{ space }} phase diagram (left). The relative stability of all other phases at this composition (and the combination of other stable phases, if no compound at this composition is stable) is shown in the relative stability plot (right).
+  <div>
+    {% if pd3d %}
+    <div style="width:600px;height:500px;margin:1px;float:left">
+      <div id="phasediagram" class="flot-placeholder"></div>
+    </div>
+
+    <div style="width:200px;height:500px;margin:1px;margin-left:10px;float:left">
+      <div id="placeholder" class="flot-placeholder"></div>
+    </div>
+    {% else %}
+    <div style="width:500px;height:400px;margin:40px;float:left">
+      <div id="phasediagram" class="flot-placeholder"></div>
+    </div>
+
+    <div style="width:200px;height:400px;margin:40px;float:left">
+      <div id="placeholder" class="flot-placeholder"></div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if results %}
+<div style="padding-top:20px;float:left">
+<h1> Compounds at this composition </h1>
+<table>
+<thead>
+  <tr>
+    <th>ID</th>
+    <th>Composition</th>
+    <th>Spacegroup</th>
+    <th>Formation Energy [eV/atom]</th>
+    <th>Stability [eV/atom]</th>
+    <th>Prototype</th>
+    <th># of atoms</th>
+    <th>Projects</th>
+    <th>Finish Time</th>
+    <th>Reference</th>
+  </tr>
+</thead>
+
+<tbody>
+  {% for fe, pro, ftime in results_project %}
+  <tr class=clickableRow href="/materials/entry/{{ fe.entry.id }}">
+    <td><a href="/materials/entry/{{ fe.entry.id }}" target="_blank">{{ fe.entry.id  }}</a></td>
+    <td>{{ fe.entry.html | safe }}</td>
+    <td>{{ fe.calculation.output.spacegroup.symbol }}</td>
+    <td>{{ fe.delta_e |floatformat:-3 }}</td>
+    {% if fe.stability < 0 %}
+    	<td>{{ 0 }}</td>
+    {% else %}
+    	<td>{{ fe.stability |floatformat:-3 }}</td>
+    {% endif %}
+    <td>{{ fe.entry.prototype.name }}</td>
+    <td>{{ fe.calculation.output.natoms }}</td>
+    <td>{{ pro }}</td>
+    <td width="8%">{{ ftime |date:"M Y" }}</td>
+    <td width="25%">{{ fe.entry.reference.citation }}</td>
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+</div>
+
+{% endif %}
+
+{% if running %}
+<div style="padding-top:20px;float:left">
+<h2> Compounds not completed at this composition </h2>
+<h3> (running, failed, held) </h3>
+<table>
+<thead>
+  <tr>
+    <th>ID</th>
+    <th>Composition</th>
+    <th>Spacegroup</th>
+    <th>Prototype</th>
+    <th># of atoms</th>
+    <th>Projects</th>
+    <th>Create Time</th>
+    <th>Reference</th>
+  </tr>
+</thead>
+
+<tbody>
+  {% for entry, pro, ctime in running %}
+  <tr class=clickableRow href="/materials/entry/{{ entry.id }}">
+    <td><a href="/materials/entry/{{ entry.id }}" target="_blank">{{ entry.id  }}</a></td>
+    <td>{{ entry.html | safe }}</td>
+    <td>{{ entry.input.spacegroup.symbol }}</td>
+    <td>{{ entry.prototype.name }}</td>
+    <td>{{ entry.input.natoms }}</td>
+    <td>{{ pro }}</td>
+    <td>{{ ctime |date:"M Y" }}</td>
+    <td>{{ entry.reference.citation }}</td>
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block sidebar %}
+
+<div id="sidebar" class="box">
+  <h2 class="subhead"> Search for a composition or region </h2>
+  <form id="theForm">
+    <input id='subj' value="{{ search }}"/>
+    <input type='submit'/>
+  </form>
+  Examples:<br>
+  <ul>
+    <li>Al2O3
+    <li>LiFeO2
+    <li>Cu2MnAl
+    <li>Fe-O
+    <li>Ni-Ti-Al
+  </ul>
+
+</div>
+{% endblock %}
