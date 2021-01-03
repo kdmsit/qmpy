@@ -6,8 +6,7 @@ from qmpy import *
 #     composition=data[0]
 #     entry=Element.get(composition)
 # print(entry)
-# print("Hello")
 
 
-s = io.read('qmpy/io/files/POSCAR_BCC')
+s = io.poscar.read('qmpy/io/files/POSCAR_BCC')
 print(s)
